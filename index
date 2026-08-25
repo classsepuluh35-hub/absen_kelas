@@ -1,207 +1,55 @@
-<!--
-  ====================================================================
-  SIGESIT - SMAN 1 PARUNG (BOGOR)
-  STATE GLOBAL & HELPER PENGATURAN: SCRIPT_URL, konfigurasi geofence,
-  linkPengaturanList, cek hari libur, popup pamplate presensi.
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SiGesit - SMAN 1 Parung</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Leaflet JS (Peta) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-  File ini di-include ke Index.html lewat:
+    <?!= include('Style'); ?>
+</head>
+<body class="min-h-screen text-slate-800 flex flex-col pb-20 md:pb-0">
+
+    <main class="flex-1 max-w-md w-full mx-auto bg-white min-h-screen shadow-2xl relative flex flex-col overflow-hidden border-x border-slate-100">
+
+        <?!= include('Body_Header'); ?>
+        <?!= include('Body_Login'); ?>
+        <?!= include('Body_Home'); ?>
+        <?!= include('Body_Izin'); ?>
+        <?!= include('Body_Riwayat'); ?>
+        <?!= include('Body_Nilai'); ?>
+        <?!= include('Body_Poin'); ?>
+        <?!= include('Body_Profil'); ?>
+        <?!= include('Body_Admin'); ?>
+        <?!= include('Body_BottomNav'); ?>
+
+    </main>
+
+    <?!= include('Body_Modals'); ?>
+
     <?!= include('Script_State'); ?>
-  (fungsi include() didefinisikan di Index.html / Code.gs)
-  ====================================================================
--->
-<script>
-        // URL Google Apps Script (hardcoded — tidak perlu diinput manual oleh siswa/wali kelas)
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby4FfAgHkcj5sY_Ks3L7Cm1wCZsLh-dNyniVfoAg5LWcMzQo9zGTblEdv_wO52ifZ1BKA/exec";
-        
-        // Konfigurasi Geofencing SMAN 1 Parung
-        const SCHOOL_LAT = -6.436954848531352; 
-        const SCHOOL_LNG = 106.71104025519386;
-        let ABSENCE_RADIUS_METERS = 150;
+    <?!= include('Script_JadwalPresensi'); ?>
+    <?!= include('Script_AdminJadwalRadius'); ?>
+    <?!= include('Script_Init'); ?>
+    <?!= include('Script_Auth'); ?>
+    <?!= include('Script_AdminPengaturan'); ?>
+    <?!= include('Script_AdminDashboardRekap'); ?>
+    <?!= include('Script_ModalDetailAdmin'); ?>
+    <?!= include('Script_SiswaSession'); ?>
+    <?!= include('Script_Presensi'); ?>
+    <?!= include('Script_Nilai'); ?>
+    <?!= include('Script_Poin'); ?>
+    <?!= include('Script_IzinWali'); ?>
+    <?!= include('Script_IzinSiswa'); ?>
+    <?!= include('Script_RekapUtama'); ?>
+    <?!= include('Script_UtilLokasi'); ?>
+    <?!= include('Script_NilaiWaliKelas'); ?>
 
-        // ================================================================
-        // PENGATURAN TAUTAN LINK GLOBAL (dikontrol Administrator)
-        // Sekarang mendukung SAMPAI 4 TAUTAN sekaligus (linkPengaturanList[0..3]),
-        // masing-masing punya judul, url, dan status aktif sendiri-sendiri.
-        // Tautan hanya tampil di menu Profil siswa apabila status "aktif"
-        // bernilai true. Siswa tidak dapat mengubah nilai ini — hanya
-        // melihat/mengklik.
-        // ================================================================
-        let linkPengaturanList = [
-            { judul: '', url: '', aktif: false },
-            { judul: '', url: '', aktif: false },
-            { judul: '', url: '', aktif: false },
-            { judul: '', url: '', aktif: false }
-        ];
-
-        // Menormalkan data tautan (baik format array baru, maupun format lama
-        // single object {judul,url,aktif}) menjadi array 4 slot yang konsisten.
-        function normalizeLinkPengaturanList(data) {
-            const defaultSlot = () => ({ judul: '', url: '', aktif: false });
-            let arr = [];
-            if (Array.isArray(data)) {
-                arr = data.map(item => ({
-                    judul: (item && item.judul) || '',
-                    url: (item && item.url) || '',
-                    aktif: !!(item && item.aktif)
-                }));
-            } else if (data && typeof data === 'object') {
-                // Format lama: satu object tunggal -> jadikan slot ke-1
-                arr = [{
-                    judul: data.judul || '',
-                    url: data.url || '',
-                    aktif: !!data.aktif
-                }];
-            }
-            while (arr.length < 4) arr.push(defaultSlot());
-            return arr.slice(0, 4);
-        }
-
-        // ================================================================
-        // PENGATURAN GAMBAR POP UP HARI LIBUR AKHIR PEKAN (dikontrol Admin)
-        // Ditampilkan menggantikan tombol Presensi Masuk/Pulang pada
-        // tampilan siswa setiap hari Sabtu & Minggu.
-        // ================================================================
-        let liburPengaturan = {
-            gambar: '',
-            judul: 'Hari Libur Sekolah',
-            pesan: 'Presensi tidak tersedia pada hari Sabtu & Minggu. Selamat beristirahat!'
-        };
-
-        // ================================================================
-        // PENGATURAN HARI LIBUR NASIONAL & KEAGAMAAN (dikontrol Admin)
-        // Berbeda dari liburPengaturan di atas (khusus Sabtu & Minggu):
-        // ini adalah daftar TANGGAL SPESIFIK (mis. Idul Fitri, Natal, HUT
-        // RI, dll) yang diinput manual oleh Administrator. Pada tanggal
-        // yang terdaftar, presensi masuk & pulang ikut ditutup (memakai
-        // mekanisme isHariLibur() yang sudah ada) dan siswa akan melihat
-        // pamplate/pesan liburNasionalPengaturan sebagai gantinya.
-        // ================================================================
-        let liburNasionalPengaturan = {
-            gambar: '',
-            judul: 'Hari Libur Nasional',
-            pesan: 'Presensi tidak tersedia karena hari ini merupakan hari libur nasional/keagamaan.'
-        };
-        let liburNasionalTanggalList = []; // [{ tanggal: 'YYYY-MM-DD', keterangan: 'Idul Fitri' }, ...]
-
-        // Mengecek apakah sebuah tanggal (format YYYY-MM-DD) terdaftar
-        // sebagai hari libur nasional/keagamaan oleh Admin.
-        function isTanggalLiburNasional(tanggalStr) {
-            return (liburNasionalTanggalList || []).some(item => item && item.tanggal === tanggalStr);
-        }
-
-        function isHariLibur() {
-            const dow = new Date().getDay();
-            const isWeekend = dow === 0 || dow === 6; // 0 = Minggu, 6 = Sabtu
-            // [TAMBAHAN] Hari libur nasional/keagamaan yang diatur Admin
-            // (tanggal spesifik di luar Sabtu/Minggu) juga menutup presensi,
-            // tanpa mengubah aturan Sabtu/Minggu yang sudah berjalan di atas.
-            return isWeekend || isTanggalLiburNasional(getTanggalHariIniLokal(new Date()));
-        }
-
-        // ================================================================
-        // PENGATURAN GAMBAR POP UP PAMPLATE PRESENSI MASUK & PULANG
-        // (dikontrol Admin, tampil ke siswa TEPAT SETELAH presensi masuk
-        // atau pulang berhasil tersimpan — berbeda dari popup libur di
-        // atas yang menggantikan tombol presensi pada hari Sabtu/Minggu).
-        // ================================================================
-        let pamplatePengaturan = {
-            masuk: {
-                gambar: '',
-                judul: 'Presensi Masuk Berhasil',
-                pesan: 'Terima kasih, kehadiran Anda telah tercatat.',
-                aktif: false
-            },
-            pulang: {
-                gambar: '',
-                judul: 'Presensi Pulang Berhasil',
-                pesan: 'Terima kasih, sampai jumpa besok!',
-                aktif: false
-            }
-        };
-
-        // Menampilkan popup pamplate presensi (masuk/pulang) ke siswa.
-        // Hanya tampil jika Admin sudah mengaktifkan DAN mengunggah gambar
-        // untuk jenis presensi terkait; jika tidak, popup tidak dipanggil
-        // sama sekali sehingga alur presensi yang sudah berjalan tidak
-        // terganggu.
-        function showPamplatePresensiPopup(type) {
-            const setting = pamplatePengaturan[type];
-            if (!setting || !setting.aktif || !setting.gambar) return;
-            const modal = document.getElementById('modal-pamplate-presensi');
-            if (!modal) return;
-            const imgEl = document.getElementById('pamplate-presensi-gambar');
-            const judulEl = document.getElementById('pamplate-presensi-judul');
-            const pesanEl = document.getElementById('pamplate-presensi-pesan');
-            if (imgEl) {
-                imgEl.src = setting.gambar;
-                imgEl.classList.remove('hidden');
-            }
-            if (judulEl) judulEl.innerText = setting.judul || (type === 'masuk' ? 'Presensi Masuk Berhasil' : 'Presensi Pulang Berhasil');
-            if (pesanEl) pesanEl.innerText = setting.pesan || '';
-            modal.classList.remove('hidden');
-        }
-
-        function closePamplatePresensiPopup() {
-            const modal = document.getElementById('modal-pamplate-presensi');
-            if (modal) modal.classList.add('hidden');
-        }
-
-        // ================================================================
-        // HELPER TANGGAL "HARI INI" — KONSISTEN DENGAN WAKTU LOKAL PERANGKAT
-        // ================================================================
-        // Semua pengecekan jadwal presensi (jam buka/batas masuk & pulang)
-        // memakai now.getHours()/now.getMinutes() yaitu waktu LOKAL device.
-        // Namun sebelumnya kode ini menandai "tanggal" record presensi
-        // memakai new Date().toISOString().slice(0,10) yang SELALU memakai
-        // waktu UTC. Karena WIB = UTC+7, maka setiap presensi yang dilakukan
-        // dini hari (00:00 - 06:59 WIB) akan tersimpan dengan tanggal HARI
-        // SEBELUMNYA versi UTC. Begitu jam menunjukkan >= 07:00 WIB, variabel
-        // "hari ini" (yang juga dihitung dari toISOString) berubah menjadi
-        // tanggal UTC yang baru, sehingga tidak lagi cocok dengan tanggal
-        // yang tersimpan pada presensi pagi tadi — akibatnya presensi masuk
-        // yang sudah dilakukan sebelum jam 06:30 tampak "hilang"/reset lagi
-        // di tombol Presensi Masuk maupun di Live Kehadiran Kelas.
-        //
-        // Fungsi ini menggantikan seluruh pemakaian toISOString().slice(0,10)
-        // dengan format tanggal berbasis waktu LOKAL perangkat (sama seperti
-        // basis jam yang dipakai untuk cek jadwal), sehingga kunci "tanggal"
-        // presensi selalu konsisten sepanjang hari — tanpa mengubah logika
-        // atau fitur lain apa pun.
-        function getTanggalHariIniLokal(dateObj) {
-            const d = dateObj || new Date();
-            const y = d.getFullYear();
-            const m = (d.getMonth() + 1).toString().padStart(2, '0');
-            const day = d.getDate().toString().padStart(2, '0');
-            return `${y}-${m}-${day}`;
-        }
-
-        // ================================================================
-        // KONFIGURASI JADWAL PRESENSI PER HARI PER JENJANG KELAS (X, XI, XII)
-        // Format: { jenjang: { hari: { masukBuka, masukBatas, pulangBuka } } }
-        // ================================================================
-        const HARI_KERJA = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'];
-        let JADWAL_PRESENSI = {
-            'X': {
-                'Senin':   { masukBuka: 5 * 60,  masukBatas: 6 * 60 + 30,  pulangBuka: 11 * 60 + 45 },
-                'Selasa':  { masukBuka: 5 * 60,  masukBatas: 6 * 60 + 30,  pulangBuka: 11 * 60 + 45 },
-                'Rabu':    { masukBuka: 5 * 60,  masukBatas: 6 * 60 + 30,  pulangBuka: 11 * 60 + 45 },
-                'Kamis':   { masukBuka: 5 * 60,  masukBatas: 6 * 60 + 30,  pulangBuka: 11 * 60 + 45 },
-                'Jumat':   { masukBuka: 5 * 60,  masukBatas: 6 * 60 + 30,  pulangBuka: 11 * 60 + 45 }
-            },
-            'XI': {
-                'Senin':   { masukBuka: 10 * 60, masukBatas: 12 * 60 + 30, pulangBuka: 17 * 60 },
-                'Selasa':  { masukBuka: 10 * 60, masukBatas: 12 * 60 + 30, pulangBuka: 17 * 60 },
-                'Rabu':    { masukBuka: 10 * 60, masukBatas: 12 * 60 + 30, pulangBuka: 17 * 60 },
-                'Kamis':   { masukBuka: 10 * 60, masukBatas: 12 * 60 + 30, pulangBuka: 17 * 60 },
-                'Jumat':   { masukBuka: 10 * 60, masukBatas: 12 * 60 + 30, pulangBuka: 17 * 60 }
-            },
-            'XII': {
-                'Senin':   { masukBuka: 0,       masukBatas: 6 * 60 + 30,  pulangBuka: 15 * 60 },
-                'Selasa':  { masukBuka: 0,       masukBatas: 6 * 60 + 30,  pulangBuka: 15 * 60 },
-                'Rabu':    { masukBuka: 0,       masukBatas: 6 * 60 + 30,  pulangBuka: 15 * 60 },
-                'Kamis':   { masukBuka: 0,       masukBatas: 6 * 60 + 30,  pulangBuka: 15 * 60 },
-                'Jumat':   { masukBuka: 0,       masukBatas: 6 * 60 + 30,  pulangBuka: 15 * 60 }
-            }
-        };
-
-</script>
+</body>
+</html>
