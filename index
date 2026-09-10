@@ -1,55 +1,147 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SiGesit - SMAN 1 Parung</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Leaflet JS (Peta) -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- Widget Chat Interaktif (Elemen Mandiri) -->
+<div id="chat-container">
+  <div class="chat-header">
+    <h3>Tanya Guru</h3>
+  </div>
+  
+  <div id="chat-box" class="chat-box">
+    <!-- Pesan akan dimuat di sini -->
+  </div>
 
-    <?!= include('Style'); ?>
-</head>
-<body class="min-h-screen text-slate-800 flex flex-col pb-20 md:pb-0">
+  <form id="chat-form" class="chat-form">
+    <input type="text" id="nama-siswa" placeholder="Nama Kamu" required />
+    <select id="guru-tujuan" required>
+      <option value="">Pilih Guru...</option>
+      <option value="Pak Budi (Matematika)">Pak Budi (Matematika)</option>
+      <option value="Bu Siti (Bahasa Inggris)">Bu Siti (Bahasa Inggris)</option>
+    </select>
+    <textarea id="pesan-siswa" placeholder="Tulis pertanyaanmu..." required></textarea>
+    <button type="submit">Kirim Pesan</button>
+  </form>
+</div>
 
-    <main class="flex-1 max-w-md w-full mx-auto bg-white min-h-screen shadow-2xl relative flex flex-col overflow-hidden border-x border-slate-100">
+<style>
+  /* Desain Chat Room Terisolasi */
+  #chat-container {
+    width: 100%;
+    max-width: 400px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-family: Arial, sans-serif;
+    background: #fff;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    margin: 20px auto;
+    overflow: hidden;
+  }
+  .chat-header {
+    background: #007bff;
+    color: white;
+    padding: 12px;
+    text-align: center;
+  }
+  .chat-header h3 { margin: 0; font-size: 16px; }
+  .chat-box {
+    height: 250px;
+    overflow-y: auto;
+    padding: 10px;
+    background: #f9f9f9;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .chat-bubble {
+    background: #e1ffc7;
+    padding: 8px 12px;
+    border-radius: 8px;
+    max-width: 80%;
+    align-self: flex-end;
+    font-size: 13px;
+  }
+  .chat-bubble .meta {
+    font-size: 10px;
+    color: #666;
+    margin-bottom: 4px;
+  }
+  .chat-form {
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    gap: 6px;
+    background: #fff;
+    border-top: 1px solid #eee;
+  }
+  .chat-form input, .chat-form select, .chat-form textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 12px;
+  }
+  .chat-form button {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+  }
+  .chat-form button:hover { background: #0056b3; }
+</style>
 
-        <?!= include('Body_Header'); ?>
-        <?!= include('Body_Login'); ?>
-        <?!= include('Body_Home'); ?>
-        <?!= include('Body_Izin'); ?>
-        <?!= include('Body_Riwayat'); ?>
-        <?!= include('Body_Nilai'); ?>
-        <?!= include('Body_Poin'); ?>
-        <?!= include('Body_Profil'); ?>
-        <?!= include('Body_Admin'); ?>
-        <?!= include('Body_BottomNav'); ?>
+<script>
+  // GANTI SCRIPT_URL DI BAWAH INI DENGAN URL WEB APP GOOGLE APPS SCRIPT KAMU
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwaWX-0df3uv2Z0_tMHTC20GHyl7aUbma9qephTi58_wH811UCZY1Edk2vM3rx5HOSQzg/exec";
 
-    </main>
+  const chatBox = document.getElementById('chat-box');
+  const chatForm = document.getElementById('chat-form');
 
-    <?!= include('Body_Modals'); ?>
+  // Fungsi untuk mengambil dan menampilkan pesan dari Spreadsheet
+  async function muatPesan() {
+    try {
+      const response = await fetch(SCRIPT_URL);
+      const data = await response.json();
+      
+      chatBox.innerHTML = '';
+      data.forEach(item => {
+        const bubble = document.createElement('div');
+        bubble.className = 'chat-bubble';
+        bubble.innerHTML = `
+          <div class="meta"><strong>${item.namaSiswa}</strong> ke <i>${item.guruTujuan}</i> • ${item.waktu}</div>
+          <div>${item.pesan}</div>
+        `;
+        chatBox.appendChild(bubble);
+      });
+      chatBox.scrollTop = chatBox.scrollHeight;
+    } catch (error) {
+      console.error('Gagal memuat pesan:', error);
+    }
+  }
 
-    <?!= include('Script_State'); ?>
-    <?!= include('Script_JadwalPresensi'); ?>
-    <?!= include('Script_AdminJadwalRadius'); ?>
-    <?!= include('Script_Init'); ?>
-    <?!= include('Script_Auth'); ?>
-    <?!= include('Script_AdminPengaturan'); ?>
-    <?!= include('Script_AdminDashboardRekap'); ?>
-    <?!= include('Script_ModalDetailAdmin'); ?>
-    <?!= include('Script_SiswaSession'); ?>
-    <?!= include('Script_Presensi'); ?>
-    <?!= include('Script_Nilai'); ?>
-    <?!= include('Script_Poin'); ?>
-    <?!= include('Script_IzinWali'); ?>
-    <?!= include('Script_IzinSiswa'); ?>
-    <?!= include('Script_RekapUtama'); ?>
-    <?!= include('Script_UtilLokasi'); ?>
-    <?!= include('Script_NilaiWaliKelas'); ?>
+  // Fungsi untuk mengirim pesan ke Spreadsheet
+  chatForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const payload = {
+      namaSiswa: document.getElementById('nama-siswa').value,
+      guruTujuan: document.getElementById('guru-tujuan').value,
+      pesan: document.getElementById('pesan-siswa').value
+    };
 
-</body>
-</html>
+    try {
+      await fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+      
+      document.getElementById('pesan-siswa').value = '';
+      muatPesan(); // Perbarui tampilan chat
+    } catch (error) {
+      alert('Gagal mengirim pesan.');
+    }
+  });
+
+  // Muat pesan pertama kali saat halaman dibuka
+  muatPesan();
+</script>
