@@ -3,138 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aplikasi Pembelajaran - Menghindari Perkelahian, Miras, & Narkoba</title>
-    <!-- Google Fonts -->
+    <title>SIKAT @2026</title>
+
+    <!-- 1. Percepat Koneksi Jaringan (Preconnect) -->
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- Font Awesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        emerald: {
-                            750: '#154e3d',
-                            850: '#0f382c',
-                            900: '#0a271f',
-                            950: '#061a15'
-                        },
-                        gold: {
-                            400: '#e5c158',
-                            500: '#d4af37',
-                            600: '#b89428'
-                        },
-                        cream: '#fcfbf7'
-                    },
-                    fontFamily: {
-                        sans: ['Plus Jakarta Sans', 'sans-serif'],
-                        arabic: ['Amiri', 'serif']
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        body {
-            background-color: #f4f6f5;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-        }
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #d4af37;
-            border-radius: 4px;
-        }
-        .perspective-1000 {
-            perspective: 1000px;
-        }
-        .transform-style-3d {
-            transform-style: preserve-3d;
-        }
-        .backface-hidden {
-            backface-visibility: hidden;
-        }
-        .rotate-y-180 {
-            transform: rotateY(180deg);
-        }
 
-        /* Desain Chat Room Terisolasi */
-        #chat-container {
-            width: 100%;
-            max-width: 400px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            font-family: Arial, sans-serif;
-            background: #fff;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            margin: 20px auto;
-            overflow: hidden;
-        }
-        .chat-header {
-            background: #007bff;
-            color: white;
-            padding: 12px;
-            text-align: center;
-        }
-        .chat-header h3 { margin: 0; font-size: 16px; }
-        .chat-box {
-            height: 250px;
-            overflow-y: auto;
-            padding: 10px;
-            background: #f9f9f9;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        .chat-bubble {
-            background: #e1ffc7;
-            padding: 8px 12px;
-            border-radius: 8px;
-            max-width: 80%;
-            align-self: flex-end;
-            font-size: 13px;
-        }
-        .chat-bubble .meta {
-            font-size: 10px;
-            color: #666;
-            margin-bottom: 4px;
-        }
-        .chat-form {
-            display: flex;
-            flex-direction: column;
-            padding: 10px;
-            gap: 6px;
-            background: #fff;
-            border-top: 1px solid #eee;
-        }
-        .chat-form input, .chat-form select, .chat-form textarea {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-            font-size: 12px;
-        }
-        .chat-form button {
-            background: #007bff;
-            color: white;
-            border: none;
-            padding: 8px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        .chat-form button:hover { background: #0056b3; }
-    </style>
+    <!-- 2. Muat Font & Icon Tanpa Memblokir UI -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght=300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
+
+    <!-- 3. Terapkan atribut 'defer' pada Script -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <!-- 4. Muat Script Utama dari Vercel dengan 'defer' -->
+    <script defer src="https://nama-project-anda.vercel.app/script.js"></script>
 </head>
 <body class="text-slate-800 antialiased min-h-screen flex flex-col">
 
